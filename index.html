@@ -11,9 +11,14 @@
 
   <main class="container">
 
+    <!-- ============================== -->
     <!-- ログイン -->
+    <!-- ============================== -->
+
     <section id="loginCard" class="card">
+
       <h1>🎮 LoL Custom</h1>
+
       <p>管理者ログイン</p>
 
       <form id="loginForm">
@@ -45,25 +50,96 @@
       </form>
 
       <p id="message"></p>
+
     </section>
 
 
+    <!-- ============================== -->
     <!-- 管理画面 -->
+    <!-- ============================== -->
+
     <section id="adminPanel" class="card hidden">
 
       <div class="header-row">
+
         <div>
-          <h2>管理画面</h2>
+          <h2>🎮 LoL Custom</h2>
           <p id="userEmail"></p>
         </div>
 
         <button id="logoutButton">
           ログアウト
         </button>
+
       </div>
 
 
+      <!-- ============================== -->
+      <!-- 今回の参加者 -->
+      <!-- ============================== -->
+
+      <section class="subsection">
+
+        <h3>🎯 今回の参加者</h3>
+
+        <p>
+          今日参加する人にチェックを入れてください。
+        </p>
+
+        <div class="participant-controls">
+
+          <button
+            id="selectAllButton"
+            type="button"
+          >
+            全員選択
+          </button>
+
+          <button
+            id="clearAllButton"
+            type="button"
+          >
+            全解除
+          </button>
+
+        </div>
+
+
+        <div id="participantCount">
+          0 / 10 人
+        </div>
+
+
+        <div id="participantList">
+
+          読み込み中……
+
+        </div>
+
+
+        <div class="participant-footer">
+
+          <strong id="selectedCount">
+            0人選択中
+          </strong>
+
+          <button
+            id="teamButton"
+            type="button"
+            disabled
+          >
+            チーム分けへ →
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- ============================== -->
       <!-- 参加者追加 -->
+      <!-- ============================== -->
+
       <section class="subsection">
 
         <h3>➕ 参加者を追加</h3>
@@ -72,17 +148,20 @@
 
           <label>
             名前
+
             <input
               id="playerName"
               type="text"
               placeholder="例：たろう"
               required
             >
+
           </label>
 
 
           <label>
             ランク
+
             <select id="playerRank">
 
               <option value="Unranked">
@@ -122,11 +201,13 @@
               </option>
 
             </select>
+
           </label>
 
 
           <label>
             第1希望ロール
+
             <select id="firstRole">
 
               <option value="">
@@ -140,11 +221,13 @@
               <option value="SUP">SUP</option>
 
             </select>
+
           </label>
 
 
           <label>
             第2希望ロール
+
             <select id="secondRole">
 
               <option value="">
@@ -158,6 +241,7 @@
               <option value="SUP">SUP</option>
 
             </select>
+
           </label>
 
 
@@ -226,10 +310,13 @@
       </section>
 
 
+      <!-- ============================== -->
       <!-- 参加者一覧 -->
+      <!-- ============================== -->
+
       <section class="subsection">
 
-        <h3>👥 参加者一覧</h3>
+        <h3>👥 登録済み参加者</h3>
 
         <div id="players">
           読み込み中……

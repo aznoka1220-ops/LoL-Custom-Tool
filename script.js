@@ -48,6 +48,8 @@ const userEmail =
 const logoutButton =
   document.getElementById("logoutButton");
 
+
+// 参加者追加
 const playerForm =
   document.getElementById("playerForm");
 
@@ -66,8 +68,34 @@ const secondRole =
 const playerMessage =
   document.getElementById("playerMessage");
 
+
+// 登録済み参加者
 const playersContainer =
   document.getElementById("players");
+
+
+// 今回の参加者
+const participantList =
+  document.getElementById("participantList");
+
+const participantCount =
+  document.getElementById("participantCount");
+
+const selectedCount =
+  document.getElementById("selectedCount");
+
+const selectAllButton =
+  document.getElementById("selectAllButton");
+
+const clearAllButton =
+  document.getElementById("clearAllButton");
+
+const teamButton =
+  document.getElementById("teamButton");
+
+
+// 今回選択されている参加者
+let selectedPlayers = [];
 
 
 // ==========================================
@@ -90,11 +118,13 @@ loginForm.addEventListener(
     message.textContent =
       "ログインしています……";
 
+
     const email =
       emailInput.value.trim();
 
     const password =
       passwordInput.value;
+
 
     const {
       data,
@@ -105,6 +135,7 @@ loginForm.addEventListener(
         password
       });
 
+
     if (error) {
 
       console.error(error);
@@ -114,6 +145,7 @@ loginForm.addEventListener(
 
       return;
     }
+
 
     await showAdmin(data.user);
   }
@@ -133,9 +165,11 @@ async function checkLogin() {
   } =
     await supabase.auth.getSession();
 
+
   if (!session) {
     return;
   }
+
 
   await showAdmin(session.user);
 }
@@ -151,10 +185,14 @@ async function showAdmin(user) {
 
   adminPanel.classList.remove("hidden");
 
+
   userEmail.textContent =
     user.email;
 
+
   await loadPlayers();
+
+  await loadParticipants();
 }
 
 
@@ -167,6 +205,7 @@ playerForm.addEventListener(
   async (event) => {
 
     event.preventDefault();
+
 
     playerMessage.textContent =
       "登録しています……";
@@ -186,13 +225,15 @@ playerForm.addEventListener(
 
 
     const avoidRoles =
-      [...document.querySelectorAll(
-        'input[name="avoidRole"]:checked'
-      )]
+      [
+        ...document.querySelectorAll(
+          'input[name="avoidRole"]:checked'
+        )
+      ]
       .map(input => input.value);
 
 
-    // 同じロールを第1・第2にするのを防ぐ
+    // 第1・第2希望が同じ
     if (
       first &&
       second &&
@@ -212,14 +253,23 @@ playerForm.addEventListener(
       await supabase
         .from("players")
         .insert({
+
           name,
+
           rank,
+
           rating: 1000,
+
           games: 0,
+
           wins: 0,
+
           first_role: first,
+
           second_role: second,
+
           avoid_roles: avoidRoles
+
         });
 
 
@@ -240,13 +290,16 @@ playerForm.addEventListener(
 
     playerForm.reset();
 
+
     await loadPlayers();
+
+    await loadParticipants();
   }
 );
 
 
 // ==========================================
-// 参加者一覧
+// 登録済み参加者一覧
 // ==========================================
 
 async function loadPlayers() {
@@ -276,7 +329,10 @@ async function loadPlayers() {
   }
 
 
-  if (!data || data.length === 0) {
+  if (
+    !data ||
+    data.length === 0
+  ) {
 
     playersContainer.textContent =
       "まだ参加者が登録されていません。";
@@ -288,12 +344,13 @@ async function loadPlayers() {
   playersContainer.innerHTML =
     data.map(player => {
 
-      const roles = [
-        player.first_role,
-        player.second_role
-      ]
-      .filter(Boolean)
-      .join(" / ");
+      const roles =
+        [
+          player.first_role,
+          player.second_role
+        ]
+        .filter(Boolean)
+        .join(" / ");
 
 
       const avoid =
@@ -341,7 +398,8 @@ async function loadPlayers() {
 
       `;
 
-    }).join("");
+    })
+    .join("");
 
 
   playersContainer
@@ -362,6 +420,270 @@ async function loadPlayers() {
 
 
 // ==========================================
+// 今回の参加者一覧
+// ==========================================
+
+async function loadParticipants() {
+
+  participantList.textContent =
+    "読み込み中……";
+
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from("players")
+      .select("*")
+      .order("name");
+
+
+  if (error) {
+
+    console.error(error);
+
+    participantList.textContent =
+      `参加者を取得できませんでした：${error.message}`;
+
+    return;
+  }
+
+
+  if (
+    !data ||
+    data.length === 0
+  ) {
+
+    participantList.textContent =
+      "まだ参加者が登録されていません。";
+
+    updateParticipantCount();
+
+    return;
+  }
+
+
+  participantList.innerHTML =
+    data.map(player => {
+
+      return `
+
+        <label
+          class="participant"
+        >
+
+          <input
+            type="checkbox"
+            class="participant-checkbox"
+            value="${player.id}"
+          >
+
+          <div class="participant-info">
+
+            <div class="participant-name">
+              ${escapeHtml(player.name)}
+            </div>
+
+            <div class="participant-details">
+
+              ${escapeHtml(player.rank)}
+
+              ｜${escapeHtml(
+                [
+                  player.first_role,
+                  player.second_role
+                ]
+                .filter(Boolean)
+                .join(" / ")
+                || "希望なし"
+              )}
+
+            </div>
+
+          </div>
+
+
+          <div class="participant-rating">
+
+            Rating ${player.rating}
+
+          </div>
+
+        </label>
+
+      `;
+
+    })
+    .join("");
+
+
+  // チェックボックスイベント
+  participantList
+    .querySelectorAll(
+      ".participant-checkbox"
+    )
+    .forEach(checkbox => {
+
+      checkbox.addEventListener(
+        "change",
+        updateSelectedPlayers
+      );
+
+    });
+
+
+  // 一度選択状態を更新
+  updateSelectedPlayers();
+}
+
+
+// ==========================================
+// 選択状態更新
+// ==========================================
+
+function updateSelectedPlayers() {
+
+  const checkboxes =
+    [
+      ...participantList
+        .querySelectorAll(
+          ".participant-checkbox"
+        )
+    ];
+
+
+  selectedPlayers =
+    checkboxes
+      .filter(checkbox => checkbox.checked)
+      .map(checkbox => checkbox.value);
+
+
+  updateParticipantCount();
+}
+
+
+// ==========================================
+// 人数表示
+// ==========================================
+
+function updateParticipantCount() {
+
+  const count =
+    selectedPlayers.length;
+
+
+  participantCount.textContent =
+    `${count} / 10 人`;
+
+
+  selectedCount.textContent =
+    `${count}人選択中`;
+
+
+  // 10人になったらチーム分けボタンを押せる
+  teamButton.disabled =
+    count !== 10;
+
+
+  if (count === 10) {
+
+    teamButton.textContent =
+      "チーム分けへ →";
+
+  } else {
+
+    teamButton.textContent =
+      `あと ${10 - count} 人選択`;
+
+  }
+}
+
+
+// ==========================================
+// 全員選択
+// ==========================================
+
+selectAllButton.addEventListener(
+  "click",
+  () => {
+
+    const checkboxes =
+      participantList
+        .querySelectorAll(
+          ".participant-checkbox"
+        );
+
+
+    checkboxes.forEach(
+      checkbox => {
+
+        checkbox.checked =
+          true;
+
+      }
+    );
+
+
+    updateSelectedPlayers();
+  }
+);
+
+
+// ==========================================
+// 全解除
+// ==========================================
+
+clearAllButton.addEventListener(
+  "click",
+  () => {
+
+    const checkboxes =
+      participantList
+        .querySelectorAll(
+          ".participant-checkbox"
+        );
+
+
+    checkboxes.forEach(
+      checkbox => {
+
+        checkbox.checked =
+          false;
+
+      }
+    );
+
+
+    updateSelectedPlayers();
+  }
+);
+
+
+// ==========================================
+// チーム分けボタン
+// ==========================================
+
+teamButton.addEventListener(
+  "click",
+  () => {
+
+    if (
+      selectedPlayers.length !== 10
+    ) {
+
+      return;
+    }
+
+
+    alert(
+      "10人選択できました！\n次はチーム分けを作ります。"
+    );
+  }
+);
+
+
+// ==========================================
 // Rating更新
 // ==========================================
 
@@ -377,7 +699,9 @@ async function updateRating(id) {
     Number(input.value);
 
 
-  if (!Number.isInteger(rating)) {
+  if (
+    !Number.isInteger(rating)
+  ) {
 
     alert(
       "Ratingは整数で入力してください。"
@@ -411,6 +735,8 @@ async function updateRating(id) {
 
 
   await loadPlayers();
+
+  await loadParticipants();
 }
 
 
@@ -436,9 +762,29 @@ logoutButton.addEventListener(
 function escapeHtml(value) {
 
   return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
 }

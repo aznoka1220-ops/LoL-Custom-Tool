@@ -23,8 +23,11 @@ body {
 
 .card {
   background: white;
+
   padding: 24px;
+
   border-radius: 16px;
+
   margin-bottom: 20px;
 
   box-shadow:
@@ -33,7 +36,9 @@ body {
 
 .subsection {
   margin-top: 30px;
+
   padding-top: 24px;
+
   border-top: 1px solid #ddd;
 }
 
@@ -45,13 +50,17 @@ h3 {
 
 form {
   display: flex;
+
   flex-direction: column;
+
   gap: 16px;
 }
 
 label {
   display: flex;
+
   flex-direction: column;
+
   gap: 6px;
 
   font-size: 14px;
@@ -64,6 +73,7 @@ select {
   padding: 10px;
 
   border: 1px solid #ccc;
+
   border-radius: 8px;
 
   font-size: 16px;
@@ -73,9 +83,11 @@ button {
   padding: 11px 16px;
 
   border: none;
+
   border-radius: 8px;
 
   background: #222;
+
   color: white;
 
   cursor: pointer;
@@ -87,13 +99,21 @@ button:hover {
   opacity: 0.85;
 }
 
+button:disabled {
+  opacity: 0.4;
+
+  cursor: not-allowed;
+}
+
 .hidden {
   display: none;
 }
 
 .header-row {
   display: flex;
+
   justify-content: space-between;
+
   align-items: center;
 
   gap: 16px;
@@ -103,34 +123,113 @@ button:hover {
   flex-shrink: 0;
 }
 
-fieldset {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 14px;
+
+/* ================================= */
+/* 今回の参加者 */
+/* ================================= */
+
+.participant-controls {
+  display: flex;
+
+  gap: 8px;
+
+  margin-bottom: 12px;
 }
 
-.checkbox {
-  display: inline-flex;
-  flex-direction: row;
+.participant-controls button {
+  background: #666;
+
+  font-size: 14px;
+}
+
+#participantCount {
+  font-size: 14px;
+
+  font-weight: bold;
+
+  margin-bottom: 12px;
+}
+
+.participant-list {
+  display: flex;
+
+  flex-direction: column;
+}
+
+.participant {
+  display: flex;
+
   align-items: center;
 
-  margin-right: 14px;
-  margin-bottom: 8px;
+  gap: 12px;
+
+  padding: 12px;
+
+  border-bottom: 1px solid #eee;
+
+  cursor: pointer;
 }
 
-.checkbox input {
-  width: auto;
-  margin-right: 5px;
+.participant:hover {
+  background: #f7f7f7;
 }
 
-#message,
-#playerMessage {
-  min-height: 20px;
+.participant input {
+  width: 20px;
+
+  height: 20px;
+
+  flex-shrink: 0;
 }
+
+.participant-info {
+  flex: 1;
+}
+
+.participant-name {
+  font-weight: bold;
+}
+
+.participant-details {
+  color: #777;
+
+  font-size: 13px;
+
+  margin-top: 3px;
+}
+
+.participant-rating {
+  font-weight: bold;
+
+  font-size: 14px;
+}
+
+.participant-footer {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  gap: 16px;
+
+  margin-top: 20px;
+
+  padding-top: 16px;
+
+  border-top: 1px solid #ddd;
+}
+
+
+/* ================================= */
+/* 登録済み参加者 */
+/* ================================= */
 
 .player {
   display: flex;
+
   justify-content: space-between;
+
   align-items: center;
 
   gap: 16px;
@@ -150,21 +249,62 @@ fieldset {
 
 .player-name {
   font-weight: bold;
+
   font-size: 17px;
 }
 
 .player-details {
   color: #777;
+
   font-size: 13px;
+
   margin-top: 4px;
 }
 
 .rating-edit {
   display: flex;
+
   gap: 8px;
+
   align-items: center;
 }
 
 .rating-edit input {
   width: 90px;
+}
+
+
+/* ================================= */
+/* その他 */
+/* ================================= */
+
+fieldset {
+  border: 1px solid #ddd;
+
+  border-radius: 8px;
+
+  padding: 14px;
+}
+
+.checkbox {
+  display: inline-flex;
+
+  flex-direction: row;
+
+  align-items: center;
+
+  margin-right: 14px;
+
+  margin-bottom: 8px;
+}
+
+.checkbox input {
+  width: auto;
+
+  margin-right: 5px;
+}
+
+#message,
+#playerMessage {
+  min-height: 20px;
 }
