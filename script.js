@@ -12,7 +12,6 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
   "sb_publishable_-_TUs3rBvdqeIAfsSVylrA_7TPFDsbU";
 
-
 const supabase =
   createClient(
     SUPABASE_URL,
@@ -123,6 +122,23 @@ const teamMode =
   document.getElementById("teamMode");
 
 
+// 手動チーム変更
+const manualPlayerList =
+  document.getElementById(
+    "manualPlayerList"
+  );
+
+const swapPlayersButton =
+  document.getElementById(
+    "swapPlayersButton"
+  );
+
+const manualEditMessage =
+  document.getElementById(
+    "manualEditMessage"
+  );
+
+
 // 追加されていれば使用
 const copyButton =
   document.getElementById("copyTeamButton");
@@ -130,6 +146,8 @@ const copyButton =
 const teamMessage =
   document.getElementById("teamMessage");
 
+
+// 試合結果
 const blueWinButton =
   document.getElementById("blueWinButton");
 
@@ -147,6 +165,9 @@ const matchMessage =
 let selectedPlayers = [];
 
 let currentTeams = null;
+
+// 手動入れ替えで選択中のプレイヤー
+let selectedSwapPlayers = [];
 
 
 // ==========================================
@@ -182,13 +203,11 @@ loginForm.addEventListener(
     message.textContent =
       "ログインしています……";
 
-
     const email =
       emailInput.value.trim();
 
     const password =
       passwordInput.value;
-
 
     const {
       data,
@@ -199,7 +218,6 @@ loginForm.addEventListener(
         password
       });
 
-
     if (error) {
 
       console.error(error);
@@ -209,7 +227,6 @@ loginForm.addEventListener(
 
       return;
     }
-
 
     await showAdmin(data.user);
   }
@@ -229,12 +246,9 @@ async function checkLogin() {
   } =
     await supabase.auth.getSession();
 
-
   if (!session) {
-
     return;
   }
-
 
   await showAdmin(session.user);
 }
@@ -250,10 +264,8 @@ async function showAdmin(user) {
 
   adminPanel.classList.remove("hidden");
 
-
   userEmail.textContent =
     user.email;
-
 
   await loadPlayers();
 
@@ -271,10 +283,8 @@ playerForm.addEventListener(
 
     event.preventDefault();
 
-
     playerMessage.textContent =
       "登録しています……";
-
 
     const name =
       playerName.value.trim();
@@ -288,7 +298,6 @@ playerForm.addEventListener(
     const second =
       secondRole.value || null;
 
-
     const avoidRoles =
       [
         ...document.querySelectorAll(
@@ -298,7 +307,6 @@ playerForm.addEventListener(
       .map(
         input => input.value
       );
-
 
     if (
       first &&
@@ -311,7 +319,6 @@ playerForm.addEventListener(
 
       return;
     }
-
 
     const {
       error
@@ -338,7 +345,6 @@ playerForm.addEventListener(
 
         });
 
-
     if (error) {
 
       console.error(error);
@@ -349,13 +355,10 @@ playerForm.addEventListener(
       return;
     }
 
-
     playerMessage.textContent =
       `${name}さんを登録しました！`;
 
-
     playerForm.reset();
-
 
     await loadPlayers();
 
@@ -373,7 +376,6 @@ async function loadPlayers() {
   playersContainer.textContent =
     "読み込み中……";
 
-
   const {
     data,
     error
@@ -382,7 +384,6 @@ async function loadPlayers() {
       .from("players")
       .select("*")
       .order("name");
-
 
   if (error) {
 
@@ -393,7 +394,6 @@ async function loadPlayers() {
 
     return;
   }
-
 
   if (
     !data ||
@@ -406,7 +406,6 @@ async function loadPlayers() {
     return;
   }
 
-
   playersContainer.innerHTML =
     data
       .map(
@@ -414,7 +413,6 @@ async function loadPlayers() {
           createPlayerHtml(player)
       )
       .join("");
-
 
   playersContainer
     .querySelectorAll(
@@ -455,7 +453,6 @@ function createPlayerHtml(
     .filter(Boolean)
     .join(" / ");
 
-
   const avoid =
     player.avoid_roles &&
     player.avoid_roles.length > 0
@@ -463,7 +460,6 @@ function createPlayerHtml(
       ? `NG：${player.avoid_roles.join(", ")}`
 
       : "NGなし";
-
 
   return `
 
@@ -482,6 +478,7 @@ function createPlayerHtml(
           )}
 
           ｜希望：
+
           ${escapeHtml(
             roles || "なし"
           )}
@@ -493,7 +490,6 @@ function createPlayerHtml(
         </div>
 
       </div>
-
 
       <div class="rating-edit">
 
@@ -528,7 +524,6 @@ async function loadParticipants() {
   participantList.textContent =
     "読み込み中……";
 
-
   const {
     data,
     error
@@ -537,7 +532,6 @@ async function loadParticipants() {
       .from("players")
       .select("*")
       .order("name");
-
 
   if (error) {
 
@@ -548,7 +542,6 @@ async function loadParticipants() {
 
     return;
   }
-
 
   if (
     !data ||
@@ -565,7 +558,6 @@ async function loadParticipants() {
     return;
   }
 
-
   participantList.innerHTML =
     data
       .map(
@@ -573,7 +565,6 @@ async function loadParticipants() {
           createParticipantHtml(player)
       )
       .join("");
-
 
   participantList
     .querySelectorAll(
@@ -589,7 +580,6 @@ async function loadParticipants() {
 
       }
     );
-
 
   updateSelectedPlayers();
 }
@@ -611,7 +601,6 @@ function createParticipantHtml(
     .filter(Boolean)
     .join(" / ");
 
-
   return `
 
     <label class="participant">
@@ -621,7 +610,6 @@ function createParticipantHtml(
         class="participant-checkbox"
         value="${player.id}"
       >
-
 
       <div class="participant-info">
 
@@ -633,16 +621,14 @@ function createParticipantHtml(
 
         </div>
 
-
         <div class="participant-details">
 
           ${escapeHtml(
             player.rank || "Unranked"
           )}
 
-          ｜
+          ｜希望：
 
-          希望：
           ${escapeHtml(
             roles || "なし"
           )}
@@ -650,7 +636,6 @@ function createParticipantHtml(
         </div>
 
       </div>
-
 
       <div class="participant-rating">
 
@@ -680,20 +665,16 @@ function updateSelectedPlayers() {
         )
     ];
 
-
   selectedPlayers =
     checkboxes
-
       .filter(
         checkbox =>
           checkbox.checked
       )
-
       .map(
         checkbox =>
           checkbox.value
       );
-
 
   updateParticipantCount();
 }
@@ -708,18 +689,14 @@ function updateParticipantCount() {
   const count =
     selectedPlayers.length;
 
-
   participantCount.textContent =
     `${count} / 10 人`;
-
 
   selectedCount.textContent =
     `${count}人選択中`;
 
-
   teamButton.disabled =
     count !== 10;
-
 
   if (count === 10) {
 
@@ -756,7 +733,6 @@ selectAllButton.addEventListener(
         }
       );
 
-
     updateSelectedPlayers();
   }
 );
@@ -783,7 +759,6 @@ clearAllButton.addEventListener(
         }
       );
 
-
     updateSelectedPlayers();
   }
 );
@@ -803,7 +778,6 @@ teamButton.addEventListener(
 
       return;
     }
-
 
     await createTeams();
   }
@@ -838,7 +812,6 @@ teamMode.addEventListener(
       return;
     }
 
-
     await createTeams();
   }
 );
@@ -854,7 +827,6 @@ async function createTeams() {
     "チームを考えています……"
   );
 
-
   const {
     data,
     error
@@ -867,7 +839,6 @@ async function createTeams() {
         selectedPlayers
       );
 
-
   if (error) {
 
     console.error(error);
@@ -878,7 +849,6 @@ async function createTeams() {
 
     return;
   }
-
 
   if (
     !data ||
@@ -892,9 +862,7 @@ async function createTeams() {
     return;
   }
 
-
   let teams;
-
 
   if (
     teamMode.value === "chaos"
@@ -910,40 +878,29 @@ async function createTeams() {
 
   }
 
-
   currentTeams =
     teams;
-
 
   displayTeams(
     teams.blue,
     teams.red
   );
 
-
   teamResult.classList.remove(
     "hidden"
   );
-
 
   teamResult.scrollIntoView({
     behavior: "smooth"
   });
 
-
-  teamMessageIfExists(
-    ""
-  );
+  teamMessageIfExists("");
 }
 
 
 // ==========================================
 // 通常ドラフト
 // ==========================================
-//
-// 第1希望 / 第2希望を考慮しつつ
-// Rating差も小さくする
-//
 
 function makeNormalTeams(
   players
@@ -951,13 +908,11 @@ function makeNormalTeams(
 
   let best = null;
 
-
   const combinations =
     getCombinations(
       players,
       5
     );
-
 
   for (
     const blue of combinations
@@ -971,7 +926,6 @@ function makeNormalTeams(
         )
       );
 
-
     const red =
       players.filter(
         player =>
@@ -980,13 +934,11 @@ function makeNormalTeams(
           )
       );
 
-
     const blueRole =
       assignRoles(
         blue,
         false
       );
-
 
     const redRole =
       assignRoles(
@@ -994,31 +946,19 @@ function makeNormalTeams(
         false
       );
 
-
     const ratingDifference =
       Math.abs(
         getRatingTotal(blue) -
         getRatingTotal(red)
       );
 
-
     const rolePenalty =
       blueRole.penalty +
       redRole.penalty;
 
-
-    /*
-     * 希望を満たせない場合には
-     * 大きなペナルティを付ける。
-     *
-     * Rating差よりも
-     * ロール希望を優先する。
-     */
-
     const score =
       rolePenalty * 10000 +
       ratingDifference;
-
 
     if (
       best === null ||
@@ -1027,9 +967,9 @@ function makeNormalTeams(
 
       best = {
 
-        blue: blue,
+        blue,
 
-        red: red,
+        red,
 
         blueRoles:
           blueRole,
@@ -1037,14 +977,12 @@ function makeNormalTeams(
         redRoles:
           redRole,
 
-        score: score
+        score
 
       };
 
     }
-
   }
-
 
   return {
 
@@ -1074,13 +1012,11 @@ function makeChaosTeams(
 
   let best = null;
 
-
   const combinations =
     getCombinations(
       players,
       5
     );
-
 
   for (
     const blue of combinations
@@ -1094,7 +1030,6 @@ function makeChaosTeams(
         )
       );
 
-
     const red =
       players.filter(
         player =>
@@ -1103,13 +1038,11 @@ function makeChaosTeams(
           )
       );
 
-
     const blueRole =
       assignRoles(
         blue,
         true
       );
-
 
     const redRole =
       assignRoles(
@@ -1117,28 +1050,19 @@ function makeChaosTeams(
         true
       );
 
-
     const ratingDifference =
       Math.abs(
         getRatingTotal(blue) -
         getRatingTotal(red)
       );
 
-
     const score =
       blueRole.penalty +
       redRole.penalty;
 
-
-    /*
-     * ワチャワチャでは
-     * RatingよりNG回避を重視。
-     */
-
     const totalScore =
       score * 10000 +
       ratingDifference * 0.2;
-
 
     if (
       best === null ||
@@ -1147,9 +1071,9 @@ function makeChaosTeams(
 
       best = {
 
-        blue: blue,
+        blue,
 
-        red: red,
+        red,
 
         blueRoles:
           blueRole,
@@ -1163,9 +1087,7 @@ function makeChaosTeams(
       };
 
     }
-
   }
-
 
   return {
 
@@ -1199,12 +1121,10 @@ function assignRoles(
   let bestPenalty =
     Infinity;
 
-
   const permutations =
     getPermutations(
       players
     );
-
 
   for (
     const permutation of permutations
@@ -1213,7 +1133,6 @@ function assignRoles(
     let penalty = 0;
 
     const assignment = {};
-
 
     for (
       let i = 0;
@@ -1227,10 +1146,8 @@ function assignRoles(
       const role =
         ROLES[i];
 
-
       assignment[player.id] =
         role;
-
 
       const first =
         player.first_role;
@@ -1242,11 +1159,6 @@ function assignRoles(
         player.avoid_roles ||
         [];
 
-
-      // ==========================
-      // ワチャワチャ
-      // ==========================
-
       if (chaos) {
 
         if (
@@ -1256,7 +1168,6 @@ function assignRoles(
           penalty += 100;
 
         }
-
 
         if (
           first === role
@@ -1276,14 +1187,8 @@ function assignRoles(
 
         }
 
-
         continue;
       }
-
-
-      // ==========================
-      // 通常ドラフト
-      // ==========================
 
       if (
         first === role
@@ -1309,9 +1214,7 @@ function assignRoles(
         penalty += 20;
 
       }
-
     }
-
 
     if (
       penalty < bestPenalty
@@ -1324,9 +1227,7 @@ function assignRoles(
         assignment;
 
     }
-
   }
-
 
   return {
 
@@ -1399,9 +1300,7 @@ function getPermutations(
 
   }
 
-
   const result = [];
-
 
   for (
     let i = 0;
@@ -1412,23 +1311,20 @@ function getPermutations(
     const current =
       array[i];
 
-
     const remaining =
-      array.slice(0, i)
+      array
+        .slice(0, i)
         .concat(
           array.slice(i + 1)
         );
-
 
     const permutations =
       getPermutations(
         remaining
       );
 
-
     for (
-      const permutation
-      of permutations
+      const permutation of permutations
     ) {
 
       result.push(
@@ -1439,9 +1335,7 @@ function getPermutations(
       );
 
     }
-
   }
-
 
   return result;
 }
@@ -1457,7 +1351,6 @@ function getCombinations(
 ) {
 
   const result = [];
-
 
   function combine(
     start,
@@ -1475,7 +1368,6 @@ function getCombinations(
       return;
     }
 
-
     for (
       let i = start;
       i < array.length;
@@ -1486,25 +1378,20 @@ function getCombinations(
         array[i]
       );
 
-
       combine(
         i + 1,
         current
       );
 
-
       current.pop();
 
     }
-
   }
-
 
   combine(
     0,
     []
   );
-
 
   return result;
 }
@@ -1529,7 +1416,6 @@ function displayTeams(
       )
       .join("");
 
-
   redTeam.innerHTML =
     red
       .map(
@@ -1540,26 +1426,21 @@ function displayTeams(
       )
       .join("");
 
-
   const blueTotal =
     getRatingTotal(
       blue
     );
-
 
   const redTotal =
     getRatingTotal(
       red
     );
 
-
   blueRating.textContent =
     blueTotal;
 
-
   redRating.textContent =
     redTotal;
-
 
   ratingDifference.textContent =
     Math.abs(
@@ -1567,8 +1448,12 @@ function displayTeams(
       redTotal
     );
 
-
   displayRoleStats(
+    blue,
+    red
+  );
+
+  renderManualPlayerList(
     blue,
     red
   );
@@ -1587,11 +1472,6 @@ function createTeamPlayerHtml(
     player.assignedRole ||
     "未定";
 
-
-  const roleClass =
-    `role-${assignedRole.toLowerCase()}`;
-
-
   return `
 
     <div class="team-player">
@@ -1606,7 +1486,7 @@ function createTeamPlayerHtml(
             )}
           </strong>
 
-         　
+          
 
           ${escapeHtml(
             player.name
@@ -1614,16 +1494,13 @@ function createTeamPlayerHtml(
 
         </div>
 
-
         <div class="team-player-rating">
 
           ${escapeHtml(
             player.rank || "Unranked"
           )}
 
-          ｜
-
-          Rating
+          ｜Rating
           ${Number(
             player.rating || 1000
           )}
@@ -1653,13 +1530,11 @@ function displayRoleStats(
       ...red
     ];
 
-
   let firstCount = 0;
 
   let secondCount = 0;
 
   let otherCount = 0;
-
 
   for (
     const player of allPlayers
@@ -1687,14 +1562,12 @@ function displayRoleStats(
 
   }
 
-
   const statsText =
     `第1希望 ${firstCount}人`
     +
     ` / 第2希望 ${secondCount}人`
     +
     ` / 希望外 ${otherCount}人`;
-
 
   if (
     teamMessage
@@ -1704,9 +1577,6 @@ function displayRoleStats(
       statsText;
 
   } else {
-
-    // teamMessageがHTMLにない場合でも
-    // コンソールには出す
 
     console.log(
       statsText
@@ -1727,11 +1597,8 @@ if (copyButton) {
     async () => {
 
       if (!currentTeams) {
-
         return;
-
       }
-
 
       const text =
         createDiscordText(
@@ -1739,13 +1606,11 @@ if (copyButton) {
           currentTeams.red
         );
 
-
       try {
 
         await navigator.clipboard.writeText(
           text
         );
-
 
         teamMessageIfExists(
           "Discord用にコピーしました！"
@@ -1783,7 +1648,6 @@ function createDiscordText(
 
       : "通常ドラフト";
 
-
   const blueText =
     blue
       .map(
@@ -1791,7 +1655,6 @@ function createDiscordText(
           `${player.assignedRole}：${player.name}`
       )
       .join("\n");
-
 
   const redText =
     red
@@ -1801,16 +1664,13 @@ function createDiscordText(
       )
       .join("\n");
 
-
   const difference =
     Math.abs(
       getRatingTotal(blue) -
       getRatingTotal(red)
     );
 
-
-  return `\
-🎮 LoL Custom
+  return `🎮 LoL Custom
 【${mode}】
 
 🔵 BLUE TEAM
@@ -1819,8 +1679,7 @@ ${blueText}
 🔴 RED TEAM
 ${redText}
 
-⚖️ Rating差：${difference}
-`;
+⚖️ Rating差：${difference}`;
 }
 
 
@@ -1837,12 +1696,14 @@ async function updateRating(
       `rating-${id}`
     );
 
+  if (!input) {
+    return;
+  }
 
   const rating =
     Number(
       input.value
     );
-
 
   if (
     !Number.isInteger(
@@ -1857,20 +1718,18 @@ async function updateRating(
     return;
   }
 
-
   const {
     error
   } =
     await supabase
       .from("players")
       .update({
-        rating: rating
+        rating
       })
       .eq(
         "id",
         id
       );
-
 
   if (error) {
 
@@ -1882,7 +1741,6 @@ async function updateRating(
 
     return;
   }
-
 
   await loadPlayers();
 
@@ -1920,7 +1778,6 @@ function teamMessageIfExists(
       text;
 
   }
-
 }
 
 
@@ -1960,6 +1817,7 @@ function escapeHtml(
     );
 }
 
+
 // ==========================================
 // 勝敗ボタン
 // ==========================================
@@ -1976,7 +1834,6 @@ if (blueWinButton) {
   );
 
 }
-
 
 if (redWinButton) {
 
@@ -1996,7 +1853,9 @@ if (redWinButton) {
 // 試合結果を保存
 // ==========================================
 
-async function recordMatch(winner) {
+async function recordMatch(
+  winner
+) {
 
   if (!currentTeams) {
 
@@ -2007,7 +1866,6 @@ async function recordMatch(winner) {
     return;
   }
 
-
   if (
     winner !== "blue" &&
     winner !== "red"
@@ -2017,13 +1875,11 @@ async function recordMatch(winner) {
 
   }
 
-
   const blue =
     currentTeams.blue;
 
   const red =
     currentTeams.red;
-
 
   const blueBefore =
     getRatingTotal(blue);
@@ -2032,9 +1888,9 @@ async function recordMatch(winner) {
     getRatingTotal(red);
 
 
-  // ==============================
+  // ========================================
   // 勝率計算
-  // ==============================
+  // ========================================
 
   const expectedBlue =
     1 /
@@ -2049,23 +1905,20 @@ async function recordMatch(winner) {
       )
     );
 
-
   const expectedRed =
     1 -
     expectedBlue;
 
 
-  // ==============================
+  // ========================================
   // K値
-  // ==============================
+  // ========================================
 
   const K = 32;
-
 
   let blueChange;
 
   let redChange;
-
 
   if (
     winner === "blue"
@@ -2094,16 +1947,15 @@ async function recordMatch(winner) {
   }
 
 
-  // ==============================
-  // プレイヤーごとのRating更新
-  // ==============================
+  // ========================================
+  // Rating更新
+  // ========================================
 
   const blueUpdates =
     [];
 
   const redUpdates =
     [];
-
 
   for (
     const player of blue
@@ -2114,14 +1966,12 @@ async function recordMatch(winner) {
         player.rating || 1000
       );
 
-
     const newRating =
       Math.max(
         1,
         oldRating +
         blueChange
       );
-
 
     blueUpdates.push({
 
@@ -2136,7 +1986,6 @@ async function recordMatch(winner) {
 
   }
 
-
   for (
     const player of red
   ) {
@@ -2146,14 +1995,12 @@ async function recordMatch(winner) {
         player.rating || 1000
       );
 
-
     const newRating =
       Math.max(
         1,
         oldRating +
         redChange
       );
-
 
     redUpdates.push({
 
@@ -2169,9 +2016,9 @@ async function recordMatch(winner) {
   }
 
 
-  // ==============================
-  // DB更新
-  // ==============================
+  // ========================================
+  // BLUE Rating更新
+  // ========================================
 
   for (
     const update of blueUpdates
@@ -2183,16 +2030,13 @@ async function recordMatch(winner) {
       await supabase
         .from("players")
         .update({
-
           rating:
-            update.newRating,
-
+            update.newRating
         })
         .eq(
           "id",
           update.id
         );
-
 
     if (error) {
 
@@ -2208,6 +2052,10 @@ async function recordMatch(winner) {
 
   }
 
+
+  // ========================================
+  // RED Rating更新
+  // ========================================
 
   for (
     const update of redUpdates
@@ -2219,16 +2067,13 @@ async function recordMatch(winner) {
       await supabase
         .from("players")
         .update({
-
           rating:
             update.newRating
-
         })
         .eq(
           "id",
           update.id
         );
-
 
     if (error) {
 
@@ -2245,9 +2090,9 @@ async function recordMatch(winner) {
   }
 
 
-  // ==============================
+  // ========================================
   // 試合履歴保存
-  // ==============================
+  // ========================================
 
   const {
     error:
@@ -2269,9 +2114,7 @@ async function recordMatch(winner) {
               player.id
           ),
 
-        winner:
-
-          winner,
+        winner,
 
         blue_rating_before:
           blueBefore,
@@ -2289,7 +2132,6 @@ async function recordMatch(winner) {
 
       });
 
-
   if (matchError) {
 
     console.error(
@@ -2305,9 +2147,9 @@ async function recordMatch(winner) {
   }
 
 
-  // ==============================
+  // ========================================
   // 完了表示
-  // ==============================
+  // ========================================
 
   const winnerText =
     winner === "blue"
@@ -2315,7 +2157,6 @@ async function recordMatch(winner) {
       ? "🔵 BLUE TEAM"
 
       : "🔴 RED TEAM";
-
 
   if (matchMessage) {
 
@@ -2328,9 +2169,10 @@ async function recordMatch(winner) {
         Ratingを更新しました。
         <br>
         今回の変動：
-        ${winner === "blue"
-          ? `BLUE +${blueChange} / RED ${redChange}`
-          : `BLUE ${blueChange} / RED +${redChange}`
+        ${
+          winner === "blue"
+            ? `BLUE +${blueChange} / RED ${redChange}`
+            : `BLUE ${blueChange} / RED +${redChange}`
         }
       `;
 
@@ -2345,29 +2187,90 @@ async function recordMatch(winner) {
     true;
 
 
-  // 最新Ratingを取得
   await loadPlayers();
 
   await loadParticipants();
 
 
-  // チーム結果も更新
-  displayTeams(
+  // 最新Ratingで表示更新
+  const updatedBlue =
     await getPlayersByIds(
       blue.map(
         player =>
           player.id
       )
-    ),
+    );
+
+  const updatedRed =
     await getPlayersByIds(
       red.map(
         player =>
           player.id
       )
-    )
+    );
+
+
+  // 手動変更後のチームを維持
+  const blueWithRoles =
+    blue.map(oldPlayer => {
+
+      const updated =
+        updatedBlue.find(
+          player =>
+            String(player.id) ===
+            String(oldPlayer.id)
+        );
+
+      return {
+        ...(updated || oldPlayer),
+        assignedRole:
+          oldPlayer.assignedRole
+      };
+
+    });
+
+
+  const redWithRoles =
+    red.map(oldPlayer => {
+
+      const updated =
+        updatedRed.find(
+          player =>
+            String(player.id) ===
+            String(oldPlayer.id)
+        );
+
+      return {
+        ...(updated || oldPlayer),
+        assignedRole:
+          oldPlayer.assignedRole
+      };
+
+    });
+
+
+  currentTeams = {
+
+    blue:
+      blueWithRoles,
+
+    red:
+      redWithRoles
+
+  };
+
+
+  displayTeams(
+    currentTeams.blue,
+    currentTeams.red
   );
 
 }
+
+
+// ==========================================
+// IDからプレイヤー取得
+// ==========================================
 
 async function getPlayersByIds(
   ids
@@ -2385,7 +2288,6 @@ async function getPlayersByIds(
         ids
       );
 
-
   if (error) {
 
     console.error(error);
@@ -2394,7 +2296,393 @@ async function getPlayersByIds(
 
   }
 
-
   return data || [];
+}
+
+
+// ==========================================
+// 手動チーム変更
+// ==========================================
+
+function renderManualPlayerList(
+  blue,
+  red
+) {
+
+  if (!manualPlayerList) {
+    return;
+  }
+
+
+  const players = [
+
+    ...blue.map(
+      player => ({
+        ...player,
+        team: "blue"
+      })
+    ),
+
+    ...red.map(
+      player => ({
+        ...player,
+        team: "red"
+      })
+    )
+
+  ];
+
+
+  manualPlayerList.innerHTML =
+    players
+      .map(
+        player => {
+
+          const teamMark =
+            player.team === "blue"
+              ? "🔵"
+              : "🔴";
+
+          return `
+
+            <label class="manual-player">
+
+              <input
+                type="checkbox"
+                class="swap-player"
+                value="${player.id}"
+              >
+
+              <span>
+
+                ${teamMark}
+
+                ${escapeHtml(
+                  player.name
+                )}
+
+                ・
+
+                ${escapeHtml(
+                  player.assignedRole || ""
+                )}
+
+                ・Rating
+
+                ${Number(
+                  player.rating || 1000
+                )}
+
+              </span>
+
+            </label>
+
+          `;
+
+        }
+      )
+      .join("");
+
+
+  manualPlayerList
+    .querySelectorAll(
+      ".swap-player"
+    )
+    .forEach(
+      checkbox => {
+
+        checkbox.addEventListener(
+          "change",
+          updateSwapSelection
+        );
+
+      }
+    );
+
+
+  updateSwapSelection();
+}
+
+
+// ==========================================
+// 入れ替え対象の選択
+// ==========================================
+
+function updateSwapSelection() {
+
+  selectedSwapPlayers =
+    [
+      ...manualPlayerList
+        .querySelectorAll(
+          ".swap-player:checked"
+        )
+    ]
+    .map(
+      checkbox =>
+        checkbox.value
+    );
+
+
+  if (swapPlayersButton) {
+
+    swapPlayersButton.disabled =
+      selectedSwapPlayers.length !== 2;
+
+  }
+
+
+  if (manualEditMessage) {
+
+    if (
+      selectedSwapPlayers.length === 0
+    ) {
+
+      manualEditMessage.textContent =
+        "";
+
+    } else if (
+      selectedSwapPlayers.length === 1
+    ) {
+
+      manualEditMessage.textContent =
+        "もう1人選択してください。";
+
+    } else if (
+      selectedSwapPlayers.length === 2
+    ) {
+
+      manualEditMessage.textContent =
+        "2人選択しました。入れ替えできます。";
+
+    } else {
+
+      manualEditMessage.textContent =
+        "2人まで選択してください。";
+
+    }
+
+  }
+
+}
+
+
+// ==========================================
+// 入れ替えボタン
+// ==========================================
+
+if (swapPlayersButton) {
+
+  swapPlayersButton.addEventListener(
+    "click",
+    swapSelectedPlayers
+  );
+
+}
+
+
+// ==========================================
+// 2人を入れ替える
+// ==========================================
+
+function swapSelectedPlayers() {
+
+  if (
+    !currentTeams ||
+    selectedSwapPlayers.length !== 2
+  ) {
+
+    return;
+
+  }
+
+
+  const [
+    firstId,
+    secondId
+  ] =
+    selectedSwapPlayers;
+
+
+  const blueFirst =
+    currentTeams.blue.findIndex(
+      player =>
+        String(player.id) ===
+        String(firstId)
+    );
+
+
+  const blueSecond =
+    currentTeams.blue.findIndex(
+      player =>
+        String(player.id) ===
+        String(secondId)
+    );
+
+
+  const redFirst =
+    currentTeams.red.findIndex(
+      player =>
+        String(player.id) ===
+        String(firstId)
+    );
+
+
+  const redSecond =
+    currentTeams.red.findIndex(
+      player =>
+        String(player.id) ===
+        String(secondId)
+    );
+
+
+  // ========================================
+  // BLUE ↔ BLUE
+  // ========================================
+
+  if (
+    blueFirst !== -1 &&
+    blueSecond !== -1
+  ) {
+
+    const temp =
+      currentTeams.blue[
+        blueFirst
+      ];
+
+    currentTeams.blue[
+      blueFirst
+    ] =
+      currentTeams.blue[
+        blueSecond
+      ];
+
+    currentTeams.blue[
+      blueSecond
+    ] =
+      temp;
+
+  }
+
+
+  // ========================================
+  // RED ↔ RED
+  // ========================================
+
+  else if (
+    redFirst !== -1 &&
+    redSecond !== -1
+  ) {
+
+    const temp =
+      currentTeams.red[
+        redFirst
+      ];
+
+    currentTeams.red[
+      redFirst
+    ] =
+      currentTeams.red[
+        redSecond
+      ];
+
+    currentTeams.red[
+      redSecond
+    ] =
+      temp;
+
+  }
+
+
+  // ========================================
+  // BLUE ↔ RED
+  // ========================================
+
+  else {
+
+    let blueIndex = -1;
+
+    let redIndex = -1;
+
+
+    if (
+      blueFirst !== -1 &&
+      redSecond !== -1
+    ) {
+
+      blueIndex =
+        blueFirst;
+
+      redIndex =
+        redSecond;
+
+    } else if (
+      blueSecond !== -1 &&
+      redFirst !== -1
+    ) {
+
+      blueIndex =
+        blueSecond;
+
+      redIndex =
+        redFirst;
+
+    }
+
+
+    if (
+      blueIndex === -1 ||
+      redIndex === -1
+    ) {
+
+      return;
+
+    }
+
+
+    const temp =
+      currentTeams.blue[
+        blueIndex
+      ];
+
+
+    currentTeams.blue[
+      blueIndex
+    ] =
+      currentTeams.red[
+        redIndex
+      ];
+
+
+    currentTeams.red[
+      redIndex
+    ] =
+      temp;
+
+  }
+
+
+  // ========================================
+  // 選択解除
+  // ========================================
+
+  selectedSwapPlayers = [];
+
+
+  // ========================================
+  // 再表示
+  // ========================================
+
+  displayTeams(
+    currentTeams.blue,
+    currentTeams.red
+  );
+
+
+  if (manualEditMessage) {
+
+    manualEditMessage.textContent =
+      "✅ チームを入れ替えました！";
+
+  }
 
 }

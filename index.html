@@ -337,6 +337,27 @@
 
       <h3>⚔️ チーム分け結果</h3>
 
+      <div class="team-mode">
+
+        <label>
+          モード
+
+          <select id="teamMode">
+
+            <option value="normal">
+              通常ドラフト
+            </option>
+
+            <option value="chaos">
+              ワチャワチャ回
+            </option>
+
+          </select>
+
+        </label>
+
+      </div>
+
       <div class="team-container">
 
         <!-- BLUE -->
@@ -398,11 +419,34 @@
       <div class="team-buttons">
 
         <button
-          id="remakeTeamButton"
+          id="rerollButton"
           type="button"
         >
           🔄 もう一回！
         </button>
+
+      </div>
+
+
+      <div class="manual-team-edit">
+
+        <h3>🛠️ チームを手動調整</h3>
+
+        <p>
+          入れ替えたい2人を選択してください。
+        </p>
+
+        <div id="manualPlayerList"></div>
+
+        <button
+          id="swapPlayersButton"
+          type="button"
+          disabled
+        >
+          🔄 選択した2人を入れ替える
+        </button>
+
+        <p id="manualEditMessage"></p>
 
       </div>
 
