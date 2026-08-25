@@ -131,84 +131,6 @@
             チーム分けへ →
           </button>
 
-          <!-- チーム分け結果 -->
-
-          <section
-            id="teamResult"
-            class="subsection hidden"
-          >
-
-            <h3>⚔️ チーム分け結果</h3>
-
-            <div class="team-mode">
-              <label>
-                モード
-                <select id="teamMode">
-                  <option value="normal">
-                    通常ドラフト
-                  </option>
-
-                  <option value="chaos">
-                    ワチャワチャ回
-                  </option>
-                </select>
-              </label>
-            </div>
-
-
-            <div class="teams">
-
-              <!-- BLUE -->
-
-              <div class="team blue-team">
-
-                <h4>🔵 BLUE TEAM</h4>
-
-                <div id="blueTeam"></div>
-
-                <div class="team-total">
-                  合計 Rating：
-                  <strong id="blueRating">0</strong>
-                </div>
-
-              </div>
-
-
-              <!-- RED -->
-
-              <div class="team red-team">
-
-                <h4>🔴 RED TEAM</h4>
-
-                <div id="redTeam"></div>
-
-                <div class="team-total">
-                  合計 Rating：
-                  <strong id="redRating">0</strong>
-                </div>
-
-              </div>
-
-            </div>
-
-
-            <div class="team-difference">
-
-              Rating差：
-              <strong id="ratingDifference">0</strong>
-
-            </div>
-
-
-            <button
-              id="rerollButton"
-              type="button"
-            >
-              🔄 もう一回振り分ける
-            </button>
-
-          </section>
-
         </div>
 
       </section>
@@ -409,7 +331,7 @@
     <!-- ============================== -->
 
     <section
-      id="teamPanel"
+      id="teamResult"
       class="subsection hidden"
     >
 
@@ -483,6 +405,34 @@
         </button>
 
       </div>
+
+      <div class="match-result">
+
+  <h3>🏆 試合結果</h3>
+
+  <p id="matchMessage">
+    試合が終わったら勝ったチームを選択してください。
+    </p>
+
+    <div class="match-buttons">
+
+      <button
+        id="blueWinButton"
+        type="button"
+      >
+        🔵 BLUE WIN
+      </button>
+
+      <button
+        id="redWinButton"
+        type="button"
+      >
+        🔴 RED WIN
+      </button>
+
+    </div>
+
+  </div>
 
     </section>
 
