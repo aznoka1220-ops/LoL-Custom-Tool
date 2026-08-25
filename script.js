@@ -3,14 +3,18 @@ import { createClient } from
 
 
 // ==========================================
-// Supabase
+// Supabase設定
 // ==========================================
+
+// ↓↓↓ ここは今使っているものに置き換える ↓↓↓
 
 const SUPABASE_URL =
   "https://mkhkbqqstrgrrwxjxaup.supabase.co";
 
 const SUPABASE_KEY =
   "sb_publishable_-_TUs3rBvdqeIAfsSVylrA_7TPFDsbU";
+
+// ↑↑↑ ここまで ↑↑↑
 
 
 const supabase =
@@ -21,9 +25,10 @@ const supabase =
 
 
 // ==========================================
-// HTML
+// HTML要素
 // ==========================================
 
+// ログイン
 const loginCard =
   document.getElementById("loginCard");
 
@@ -39,6 +44,8 @@ const passwordInput =
 const message =
   document.getElementById("message");
 
+
+// 管理画面
 const adminPanel =
   document.getElementById("adminPanel");
 
@@ -94,7 +101,39 @@ const teamButton =
   document.getElementById("teamButton");
 
 
-// 今回選択されている参加者
+// ==========================================
+// チーム分け
+// ==========================================
+
+const teamResult =
+  document.getElementById("teamResult");
+
+const blueTeam =
+  document.getElementById("blueTeam");
+
+const redTeam =
+  document.getElementById("redTeam");
+
+const blueRating =
+  document.getElementById("blueRating");
+
+const redRating =
+  document.getElementById("redRating");
+
+const ratingDifference =
+  document.getElementById("ratingDifference");
+
+const rerollButton =
+  document.getElementById("rerollButton");
+
+const teamMode =
+  document.getElementById("teamMode");
+
+
+// ==========================================
+// 選択されている参加者
+// ==========================================
+
 let selectedPlayers = [];
 
 
@@ -167,6 +206,7 @@ async function checkLogin() {
 
 
   if (!session) {
+
     return;
   }
 
@@ -224,16 +264,19 @@ playerForm.addEventListener(
       secondRole.value || null;
 
 
+    // ワチャワチャ回のNGロール
     const avoidRoles =
       [
         ...document.querySelectorAll(
           'input[name="avoidRole"]:checked'
         )
       ]
-      .map(input => input.value);
+      .map(
+        input => input.value
+      );
 
 
-    // 第1・第2希望が同じ
+    // 第1希望と第2希望が同じか確認
     if (
       first &&
       second &&
@@ -254,9 +297,9 @@ playerForm.addEventListener(
         .from("players")
         .insert({
 
-          name,
+          name: name,
 
-          rank,
+          rank: rank,
 
           rating: 1000,
 
@@ -342,80 +385,113 @@ async function loadPlayers() {
 
 
   playersContainer.innerHTML =
-    data.map(player => {
-
-      const roles =
-        [
-          player.first_role,
-          player.second_role
-        ]
-        .filter(Boolean)
-        .join(" / ");
+    data
+      .map(
+        player =>
+          createPlayerHtml(player)
+      )
+      .join("");
 
 
-      const avoid =
-        player.avoid_roles?.length
-          ? `NG：${player.avoid_roles.join(", ")}`
-          : "NGなし";
-
-
-      return `
-
-        <div class="player">
-
-          <div class="player-info">
-
-            <div class="player-name">
-              ${escapeHtml(player.name)}
-            </div>
-
-            <div class="player-details">
-              ${escapeHtml(player.rank)}
-              ｜希望：${escapeHtml(roles || "なし")}
-              ｜${escapeHtml(avoid)}
-            </div>
-
-          </div>
-
-
-          <div class="rating-edit">
-
-            <input
-              type="number"
-              value="${player.rating}"
-              id="rating-${player.id}"
-            >
-
-            <button
-              data-id="${player.id}"
-            >
-              保存
-            </button>
-
-          </div>
-
-        </div>
-
-      `;
-
-    })
-    .join("");
-
-
+  // Rating保存ボタン
   playersContainer
     .querySelectorAll(
       "button[data-id]"
     )
-    .forEach(button => {
+    .forEach(
+      button => {
 
-      button.addEventListener(
-        "click",
-        () => updateRating(
-          button.dataset.id
-        )
-      );
+        button.addEventListener(
+          "click",
+          () => {
 
-    });
+            updateRating(
+              button.dataset.id
+            );
+
+          }
+        );
+
+      }
+    );
+}
+
+
+// ==========================================
+// 登録済み参加者HTML
+// ==========================================
+
+function createPlayerHtml(
+  player
+) {
+
+  const roles =
+    [
+      player.first_role,
+      player.second_role
+    ]
+    .filter(Boolean)
+    .join(" / ");
+
+
+  const avoid =
+    player.avoid_roles &&
+    player.avoid_roles.length > 0
+
+      ? `NG：${player.avoid_roles.join(", ")}`
+
+      : "NGなし";
+
+
+  return `
+
+    <div class="player">
+
+      <div class="player-info">
+
+        <div class="player-name">
+          ${escapeHtml(player.name)}
+        </div>
+
+        <div class="player-details">
+
+          ${escapeHtml(
+            player.rank || "Unranked"
+          )}
+
+          ｜希望：
+          ${escapeHtml(
+            roles || "なし"
+          )}
+
+          ｜
+
+          ${escapeHtml(avoid)}
+
+        </div>
+
+      </div>
+
+
+      <div class="rating-edit">
+
+        <input
+          type="number"
+          value="${Number(player.rating || 1000)}"
+          id="rating-${player.id}"
+        >
+
+        <button
+          data-id="${player.id}"
+        >
+          保存
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
 }
 
 
@@ -458,6 +534,8 @@ async function loadParticipants() {
     participantList.textContent =
       "まだ参加者が登録されていません。";
 
+    selectedPlayers = [];
+
     updateParticipantCount();
 
     return;
@@ -465,76 +543,99 @@ async function loadParticipants() {
 
 
   participantList.innerHTML =
-    data.map(player => {
-
-      return `
-
-        <label
-          class="participant"
-        >
-
-          <input
-            type="checkbox"
-            class="participant-checkbox"
-            value="${player.id}"
-          >
-
-          <div class="participant-info">
-
-            <div class="participant-name">
-              ${escapeHtml(player.name)}
-            </div>
-
-            <div class="participant-details">
-
-              ${escapeHtml(player.rank)}
-
-              ｜${escapeHtml(
-                [
-                  player.first_role,
-                  player.second_role
-                ]
-                .filter(Boolean)
-                .join(" / ")
-                || "希望なし"
-              )}
-
-            </div>
-
-          </div>
+    data
+      .map(
+        player =>
+          createParticipantHtml(player)
+      )
+      .join("");
 
 
-          <div class="participant-rating">
-
-            Rating ${player.rating}
-
-          </div>
-
-        </label>
-
-      `;
-
-    })
-    .join("");
-
-
-  // チェックボックスイベント
   participantList
     .querySelectorAll(
       ".participant-checkbox"
     )
-    .forEach(checkbox => {
+    .forEach(
+      checkbox => {
 
-      checkbox.addEventListener(
-        "change",
-        updateSelectedPlayers
-      );
+        checkbox.addEventListener(
+          "change",
+          updateSelectedPlayers
+        );
 
-    });
+      }
+    );
 
 
-  // 一度選択状態を更新
   updateSelectedPlayers();
+}
+
+
+// ==========================================
+// 今回の参加者HTML
+// ==========================================
+
+function createParticipantHtml(
+  player
+) {
+
+  const roles =
+    [
+      player.first_role,
+      player.second_role
+    ]
+    .filter(Boolean)
+    .join(" / ");
+
+
+  return `
+
+    <label class="participant">
+
+      <input
+        type="checkbox"
+        class="participant-checkbox"
+        value="${player.id}"
+      >
+
+
+      <div class="participant-info">
+
+        <div class="participant-name">
+
+          ${escapeHtml(player.name)}
+
+        </div>
+
+
+        <div class="participant-details">
+
+          ${escapeHtml(
+            player.rank || "Unranked"
+          )}
+
+          ｜
+
+          ${escapeHtml(
+            roles || "希望なし"
+          )}
+
+        </div>
+
+      </div>
+
+
+      <div class="participant-rating">
+
+        Rating ${Number(
+          player.rating || 1000
+        )}
+
+      </div>
+
+    </label>
+
+  `;
 }
 
 
@@ -555,8 +656,16 @@ function updateSelectedPlayers() {
 
   selectedPlayers =
     checkboxes
-      .filter(checkbox => checkbox.checked)
-      .map(checkbox => checkbox.value);
+
+      .filter(
+        checkbox =>
+          checkbox.checked
+      )
+
+      .map(
+        checkbox =>
+          checkbox.value
+      );
 
 
   updateParticipantCount();
@@ -564,7 +673,7 @@ function updateSelectedPlayers() {
 
 
 // ==========================================
-// 人数表示
+// 参加人数表示
 // ==========================================
 
 function updateParticipantCount() {
@@ -581,7 +690,6 @@ function updateParticipantCount() {
     `${count}人選択中`;
 
 
-  // 10人になったらチーム分けボタンを押せる
   teamButton.disabled =
     count !== 10;
 
@@ -671,128 +779,56 @@ teamButton.addEventListener(
     if (
       selectedPlayers.length !== 10
     ) {
+
       return;
     }
 
-    await makeTeams();
 
+    await createTeams();
   }
 );
 
 
 // ==========================================
-// Rating更新
+// もう一回振り分け
 // ==========================================
 
-async function updateRating(id) {
-
-  const input =
-    document.getElementById(
-      `rating-${id}`
-    );
-
-
-  const rating =
-    Number(input.value);
-
-
-  if (
-    !Number.isInteger(rating)
-  ) {
-
-    alert(
-      "Ratingは整数で入力してください。"
-    );
-
-    return;
-  }
-
-
-  const {
-    error
-  } =
-    await supabase
-      .from("players")
-      .update({
-        rating
-      })
-      .eq("id", id);
-
-
-  if (error) {
-
-    console.error(error);
-
-    alert(
-      `Ratingの更新に失敗しました：${error.message}`
-    );
-
-    return;
-  }
-
-
-  await loadPlayers();
-
-  await loadParticipants();
-}
-
-
-// ==========================================
-// ログアウト
-// ==========================================
-
-logoutButton.addEventListener(
+rerollButton.addEventListener(
   "click",
   async () => {
 
-    await supabase.auth.signOut();
-
-    location.reload();
+    await createTeams();
   }
 );
 
 
 // ==========================================
-// HTMLエスケープ
+// モード変更
 // ==========================================
 
-function escapeHtml(value) {
+teamMode.addEventListener(
+  "change",
+  async () => {
 
-  return String(value)
+    if (
+      selectedPlayers.length !== 10
+    ) {
 
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
+      return;
+    }
 
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
 
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
+    await createTeams();
+  }
+);
 
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
-}
 
 // ==========================================
-// チーム分け
+// チーム作成
 // ==========================================
 
-async function makeTeams() {
+async function createTeams() {
 
-  // 選択された10人を取得
   const {
     data,
     error
@@ -824,103 +860,196 @@ async function makeTeams() {
   ) {
 
     alert(
-      "10人の参加者を取得できませんでした。"
+      "参加者を10人取得できませんでした。"
     );
 
     return;
   }
 
 
-  // ------------------------------------------
-  // Rating順に並べる
-  // ------------------------------------------
+  const teams =
+    makeBalancedTeams(data);
 
-  const players =
-    [...data].sort(
-      (a, b) =>
-        Number(b.rating) -
-        Number(a.rating)
+
+  displayTeams(
+    teams.blue,
+    teams.red
+  );
+
+
+  teamResult.classList.remove(
+    "hidden"
+  );
+
+
+  teamResult.scrollIntoView({
+    behavior: "smooth"
+  });
+}
+
+
+// ==========================================
+// Ratingが近くなる5vs5を探す
+// ==========================================
+
+function makeBalancedTeams(
+  players
+) {
+
+  let bestBlue = null;
+
+  let bestRed = null;
+
+  let bestDifference =
+    Infinity;
+
+
+  // 10人から5人を選ぶ
+  const combinations =
+    getCombinations(
+      players,
+      5
     );
 
 
-  // ------------------------------------------
-  // 最初は空チーム
-  // ------------------------------------------
-
-  let blue = [];
-
-  let red = [];
-
-
-  let blueTotal = 0;
-
-  let redTotal = 0;
-
-
-  // ------------------------------------------
-  // 強い人から順番に、
-  // 現在Ratingが低いチームへ入れる
-  // ------------------------------------------
-
   for (
-    const player of players
+    const blue of combinations
   ) {
 
-    const rating =
-      Number(player.rating) || 1000;
+    const blueIds =
+      new Set(
+        blue.map(
+          player =>
+            player.id
+        )
+      );
+
+
+    const red =
+      players.filter(
+        player =>
+          !blueIds.has(
+            player.id
+          )
+      );
+
+
+    const blueTotal =
+      blue.reduce(
+        (sum, player) =>
+          sum +
+          Number(
+            player.rating || 1000
+          ),
+        0
+      );
+
+
+    const redTotal =
+      red.reduce(
+        (sum, player) =>
+          sum +
+          Number(
+            player.rating || 1000
+          ),
+        0
+      );
+
+
+    const difference =
+      Math.abs(
+        blueTotal -
+        redTotal
+      );
 
 
     if (
-      blue.length >= 5
+      difference <
+      bestDifference
     ) {
 
-      red.push(player);
+      bestDifference =
+        difference;
 
-      redTotal += rating;
+      bestBlue =
+        blue;
 
-      continue;
-    }
-
-
-    if (
-      red.length >= 5
-    ) {
-
-      blue.push(player);
-
-      blueTotal += rating;
-
-      continue;
-    }
-
-
-    if (
-      blueTotal <= redTotal
-    ) {
-
-      blue.push(player);
-
-      blueTotal += rating;
-
-    } else {
-
-      red.push(player);
-
-      redTotal += rating;
+      bestRed =
+        red;
 
     }
-
   }
 
 
-  // ------------------------------------------
-  // 結果表示
-  // ------------------------------------------
+  return {
 
-  displayTeams(
-    blue,
-    red
+    blue: bestBlue,
+
+    red: bestRed
+
+  };
+}
+
+
+// ==========================================
+// 組み合わせ生成
+// ==========================================
+
+function getCombinations(
+  array,
+  size
+) {
+
+  const result = [];
+
+
+  function combine(
+    start,
+    current
+  ) {
+
+    if (
+      current.length === size
+    ) {
+
+      result.push(
+        [...current]
+      );
+
+      return;
+    }
+
+
+    for (
+      let i = start;
+      i < array.length;
+      i++
+    ) {
+
+      current.push(
+        array[i]
+      );
+
+
+      combine(
+        i + 1,
+        current
+      );
+
+
+      current.pop();
+
+    }
+  }
+
+
+  combine(
+    0,
+    []
   );
+
+
+  return result;
 }
 
 
@@ -934,18 +1063,34 @@ function displayTeams(
 ) {
 
   blueTeam.innerHTML =
-    createTeamHTML(blue);
+    blue
+      .map(
+        player =>
+          createTeamPlayerHtml(
+            player
+          )
+      )
+      .join("");
 
 
   redTeam.innerHTML =
-    createTeamHTML(red);
+    red
+      .map(
+        player =>
+          createTeamPlayerHtml(
+            player
+          )
+      )
+      .join("");
 
 
   const blueTotal =
     blue.reduce(
       (sum, player) =>
         sum +
-        (Number(player.rating) || 1000),
+        Number(
+          player.rating || 1000
+        ),
       0
     );
 
@@ -954,7 +1099,9 @@ function displayTeams(
     red.reduce(
       (sum, player) =>
         sum +
-        (Number(player.rating) || 1000),
+        Number(
+          player.rating || 1000
+        ),
       0
     );
 
@@ -972,82 +1119,184 @@ function displayTeams(
       blueTotal -
       redTotal
     );
-
-
-  teamPanel.classList.remove(
-    "hidden"
-  );
-
-
-  // チーム結果までスクロール
-  teamPanel.scrollIntoView({
-    behavior: "smooth"
-  });
 }
 
 
 // ==========================================
-// チームメンバーHTML
+// チーム内プレイヤー表示
 // ==========================================
 
-function createTeamHTML(
-  team
+function createTeamPlayerHtml(
+  player
 ) {
 
-  return team
-    .map(player => {
-
-      return `
-
-        <div class="team-player">
-
-          <div>
-
-            <div class="team-player-name">
-
-              ${escapeHtml(
-                player.name
-              )}
-
-            </div>
-
-            <div class="team-player-rating">
-
-              ${escapeHtml(
-                player.rank
-              )}
-
-            </div>
-
-          </div>
+  const roles =
+    [
+      player.first_role,
+      player.second_role
+    ]
+    .filter(Boolean)
+    .join(" / ");
 
 
-          <div class="team-player-rating">
+  return `
 
-            ${Number(
-              player.rating
-            )}
+    <div class="team-player">
 
-          </div>
+      <div>
+
+        <div class="team-player-name">
+
+          ${escapeHtml(
+            player.name
+          )}
 
         </div>
 
-      `;
 
-    })
-    .join("");
+        <div class="team-player-rating">
+
+          ${escapeHtml(
+            player.rank || "Unranked"
+          )}
+
+          ｜
+
+          Rating
+          ${Number(
+            player.rating || 1000
+          )}
+
+          ｜
+
+          ${escapeHtml(
+            roles || "ロール未設定"
+          )}
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
 }
 
 
 // ==========================================
-// もう一回
+// Rating更新
 // ==========================================
 
-remakeTeamButton.addEventListener(
+async function updateRating(
+  id
+) {
+
+  const input =
+    document.getElementById(
+      `rating-${id}`
+    );
+
+
+  const rating =
+    Number(
+      input.value
+    );
+
+
+  if (
+    !Number.isInteger(
+      rating
+    )
+  ) {
+
+    alert(
+      "Ratingは整数で入力してください。"
+    );
+
+    return;
+  }
+
+
+  const {
+    error
+  } =
+    await supabase
+      .from("players")
+      .update({
+        rating: rating
+      })
+      .eq(
+        "id",
+        id
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      `Ratingの更新に失敗しました：${error.message}`
+    );
+
+    return;
+  }
+
+
+  await loadPlayers();
+
+  await loadParticipants();
+}
+
+
+// ==========================================
+// ログアウト
+// ==========================================
+
+logoutButton.addEventListener(
   "click",
   async () => {
 
-    await makeTeams();
+    await supabase.auth.signOut();
+
+    location.reload();
 
   }
 );
+
+
+// ==========================================
+// HTMLエスケープ
+// ==========================================
+
+function escapeHtml(
+  value
+) {
+
+  return String(value)
+
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+}

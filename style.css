@@ -413,3 +413,92 @@ fieldset {
   }
 
 }
+
+/* ================================= */
+/* チーム分け */
+/* ================================= */
+
+.teams {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 16px;
+
+  margin-top: 20px;
+}
+
+.team {
+  padding: 18px;
+
+  border-radius: 12px;
+
+  background: #f7f7f7;
+}
+
+.team h4 {
+  margin-top: 0;
+
+  font-size: 18px;
+}
+
+.team-player {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 10px 0;
+
+  border-bottom: 1px solid #ddd;
+}
+
+.team-player:last-child {
+  border-bottom: none;
+}
+
+.team-player-name {
+  font-weight: bold;
+}
+
+.team-player-rating {
+  font-size: 13px;
+
+  color: #777;
+}
+
+.team-total {
+  margin-top: 14px;
+
+  padding-top: 12px;
+
+  border-top: 2px solid #ddd;
+
+  font-size: 14px;
+}
+
+.team-difference {
+  text-align: center;
+
+  margin: 20px 0;
+
+  font-size: 16px;
+}
+
+.team-mode {
+  max-width: 300px;
+}
+
+#rerollButton {
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+
+  .teams {
+    grid-template-columns: 1fr;
+  }
+
+}
