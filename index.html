@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LoL Custom</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <main class="container">
+
+    <!-- ログイン -->
+    <section id="loginCard" class="card">
+      <h1>🎮 LoL Custom</h1>
+      <p>管理者ログイン</p>
+
+      <form id="loginForm">
+
+        <label>
+          メールアドレス
+          <input
+            id="email"
+            type="email"
+            required
+            autocomplete="email"
+          >
+        </label>
+
+        <label>
+          パスワード
+          <input
+            id="password"
+            type="password"
+            required
+            autocomplete="current-password"
+          >
+        </label>
+
+        <button type="submit">
+          ログイン
+        </button>
+
+      </form>
+
+      <p id="message"></p>
+    </section>
+
+
+    <!-- 管理画面 -->
+    <section id="adminPanel" class="card hidden">
+
+      <div class="header-row">
+        <div>
+          <h2>管理画面</h2>
+          <p id="userEmail"></p>
+        </div>
+
+        <button id="logoutButton">
+          ログアウト
+        </button>
+      </div>
+
+
+      <!-- 参加者追加 -->
+      <section class="subsection">
+
+        <h3>➕ 参加者を追加</h3>
+
+        <form id="playerForm">
+
+          <label>
+            名前
+            <input
+              id="playerName"
+              type="text"
+              placeholder="例：たろう"
+              required
+            >
+          </label>
+
+
+          <label>
+            ランク
+            <select id="playerRank">
+
+              <option value="Unranked">
+                Unranked
+              </option>
+
+              <option value="Iron">
+                Iron
+              </option>
+
+              <option value="Bronze">
+                Bronze
+              </option>
+
+              <option value="Silver">
+                Silver
+              </option>
+
+              <option value="Gold">
+                Gold
+              </option>
+
+              <option value="Platinum">
+                Platinum
+              </option>
+
+              <option value="Emerald">
+                Emerald
+              </option>
+
+              <option value="Diamond">
+                Diamond
+              </option>
+
+              <option value="Master+">
+                Master+
+              </option>
+
+            </select>
+          </label>
+
+
+          <label>
+            第1希望ロール
+            <select id="firstRole">
+
+              <option value="">
+                選択しない
+              </option>
+
+              <option value="TOP">TOP</option>
+              <option value="JG">JG</option>
+              <option value="MID">MID</option>
+              <option value="ADC">ADC</option>
+              <option value="SUP">SUP</option>
+
+            </select>
+          </label>
+
+
+          <label>
+            第2希望ロール
+            <select id="secondRole">
+
+              <option value="">
+                選択しない
+              </option>
+
+              <option value="TOP">TOP</option>
+              <option value="JG">JG</option>
+              <option value="MID">MID</option>
+              <option value="ADC">ADC</option>
+              <option value="SUP">SUP</option>
+
+            </select>
+          </label>
+
+
+          <fieldset>
+
+            <legend>
+              ワチャワチャ回：やりたくないロール
+            </legend>
+
+            <label class="checkbox">
+              <input
+                type="checkbox"
+                name="avoidRole"
+                value="TOP"
+              >
+              TOP
+            </label>
+
+            <label class="checkbox">
+              <input
+                type="checkbox"
+                name="avoidRole"
+                value="JG"
+              >
+              JG
+            </label>
+
+            <label class="checkbox">
+              <input
+                type="checkbox"
+                name="avoidRole"
+                value="MID"
+              >
+              MID
+            </label>
+
+            <label class="checkbox">
+              <input
+                type="checkbox"
+                name="avoidRole"
+                value="ADC"
+              >
+              ADC
+            </label>
+
+            <label class="checkbox">
+              <input
+                type="checkbox"
+                name="avoidRole"
+                value="SUP"
+              >
+              SUP
+            </label>
+
+          </fieldset>
+
+
+          <button type="submit">
+            参加者を登録
+          </button>
+
+        </form>
+
+        <p id="playerMessage"></p>
+
+      </section>
+
+
+      <!-- 参加者一覧 -->
+      <section class="subsection">
+
+        <h3>👥 参加者一覧</h3>
+
+        <div id="players">
+          読み込み中……
+        </div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+
+  <script
+    type="module"
+    src="script.js"
+  ></script>
+
+</body>
+</html>
