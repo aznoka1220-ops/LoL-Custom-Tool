@@ -666,19 +666,16 @@ clearAllButton.addEventListener(
 
 teamButton.addEventListener(
   "click",
-  () => {
+  async () => {
 
     if (
       selectedPlayers.length !== 10
     ) {
-
       return;
     }
 
+    await makeTeams();
 
-    alert(
-      "10人選択できました！\n次はチーム分けを作ります。"
-    );
   }
 );
 
@@ -788,3 +785,269 @@ function escapeHtml(value) {
       "&#039;"
     );
 }
+
+// ==========================================
+// チーム分け
+// ==========================================
+
+async function makeTeams() {
+
+  // 選択された10人を取得
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from("players")
+      .select("*")
+      .in(
+        "id",
+        selectedPlayers
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      `参加者の取得に失敗しました：${error.message}`
+    );
+
+    return;
+  }
+
+
+  if (
+    !data ||
+    data.length !== 10
+  ) {
+
+    alert(
+      "10人の参加者を取得できませんでした。"
+    );
+
+    return;
+  }
+
+
+  // ------------------------------------------
+  // Rating順に並べる
+  // ------------------------------------------
+
+  const players =
+    [...data].sort(
+      (a, b) =>
+        Number(b.rating) -
+        Number(a.rating)
+    );
+
+
+  // ------------------------------------------
+  // 最初は空チーム
+  // ------------------------------------------
+
+  let blue = [];
+
+  let red = [];
+
+
+  let blueTotal = 0;
+
+  let redTotal = 0;
+
+
+  // ------------------------------------------
+  // 強い人から順番に、
+  // 現在Ratingが低いチームへ入れる
+  // ------------------------------------------
+
+  for (
+    const player of players
+  ) {
+
+    const rating =
+      Number(player.rating) || 1000;
+
+
+    if (
+      blue.length >= 5
+    ) {
+
+      red.push(player);
+
+      redTotal += rating;
+
+      continue;
+    }
+
+
+    if (
+      red.length >= 5
+    ) {
+
+      blue.push(player);
+
+      blueTotal += rating;
+
+      continue;
+    }
+
+
+    if (
+      blueTotal <= redTotal
+    ) {
+
+      blue.push(player);
+
+      blueTotal += rating;
+
+    } else {
+
+      red.push(player);
+
+      redTotal += rating;
+
+    }
+
+  }
+
+
+  // ------------------------------------------
+  // 結果表示
+  // ------------------------------------------
+
+  displayTeams(
+    blue,
+    red
+  );
+}
+
+
+// ==========================================
+// チーム表示
+// ==========================================
+
+function displayTeams(
+  blue,
+  red
+) {
+
+  blueTeam.innerHTML =
+    createTeamHTML(blue);
+
+
+  redTeam.innerHTML =
+    createTeamHTML(red);
+
+
+  const blueTotal =
+    blue.reduce(
+      (sum, player) =>
+        sum +
+        (Number(player.rating) || 1000),
+      0
+    );
+
+
+  const redTotal =
+    red.reduce(
+      (sum, player) =>
+        sum +
+        (Number(player.rating) || 1000),
+      0
+    );
+
+
+  blueRating.textContent =
+    blueTotal;
+
+
+  redRating.textContent =
+    redTotal;
+
+
+  ratingDifference.textContent =
+    Math.abs(
+      blueTotal -
+      redTotal
+    );
+
+
+  teamPanel.classList.remove(
+    "hidden"
+  );
+
+
+  // チーム結果までスクロール
+  teamPanel.scrollIntoView({
+    behavior: "smooth"
+  });
+}
+
+
+// ==========================================
+// チームメンバーHTML
+// ==========================================
+
+function createTeamHTML(
+  team
+) {
+
+  return team
+    .map(player => {
+
+      return `
+
+        <div class="team-player">
+
+          <div>
+
+            <div class="team-player-name">
+
+              ${escapeHtml(
+                player.name
+              )}
+
+            </div>
+
+            <div class="team-player-rating">
+
+              ${escapeHtml(
+                player.rank
+              )}
+
+            </div>
+
+          </div>
+
+
+          <div class="team-player-rating">
+
+            ${Number(
+              player.rating
+            )}
+
+          </div>
+
+        </div>
+
+      `;
+
+    })
+    .join("");
+}
+
+
+// ==========================================
+// もう一回
+// ==========================================
+
+remakeTeamButton.addEventListener(
+  "click",
+  async () => {
+
+    await makeTeams();
+
+  }
+);
